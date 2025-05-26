@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VemTO.cz – Obkladačské práce</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f7f7f7;
+      color: #333;
+    }
+
+    header {
+      background: #007B5E;
+      color: white;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5em;
+    }
+
+    nav {
+      background: #005B44;
+      padding: 10px;
+      text-align: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: bold;
+    }
+
+    section {
+      max-width: 900px;
+      margin: auto;
+      padding: 40px 20px;
+      background: white;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      color: #007B5E;
+    }
+
+    footer {
+      background: #333;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+    }
+
+    .email-link {
+      color: #007B5E;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    /* Chatbot styl */
+    #chatbot {
+      margin-top: 40px;
+    }
+
+    #chat-window {
+      background: #f0f0f0;
+      border-radius: 10px;
+      padding: 15px;
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+
+    .message {
+      margin-bottom: 10px;
+    }
+
+    .user {
+      font-weight: bold;
+      color: #007B5E;
+    }
+
+    .bot {
+      color: #333;
+    }
+
+    #user-input {
+      width: calc(100% - 100px);
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    #send-btn {
+      padding: 10px 20px;
+      background-color: #007B5E;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #send-btn:hover {
+      background-color: #005b44;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>VemTO.cz</h1>
+    <p>Profesionální obkladačské práce & individuální zakázky</p>
+  </header>
+
+  <nav>
+    <a href="#sluzby">Služby</a>
+    <a href="#objednavka">Objednávka</a>
+    <a href="#kontakt">Kontakt</a>
+  </nav>
+
+  <section id="sluzby">
+    <h2>Naše služby</h2>
+    <ul>
+      <li>Obkládání koupelen a kuchyní</li>
+      <li>Pokládka dlažby v interiéru i exteriéru</li>
+      <li>Opravy starého obkladu</li>
+      <li>Individuální zakázky na míru</li>
+    </ul>
+  </section>
+
+  <section id="objednavka">
+    <h2>Chcete si něco objednat?</h2>
+    <p>Nabízíme také možnost <strong>objednat cokoliv</strong> – stačí nám napsat!</p>
+    <p>Napište nám e-mail na adresu: <a class="email-link" href="mailto:VemTO@Práce.cz">VemTO@Práce.cz</a></p>
+  </section>
+
+  <section id="kontakt">
+    <h2>Kontakt</h2>
+    <p><strong>E-mail:</strong> <a class="email-link" href="mailto:VemTO@Práce.cz">VemTO@Práce.cz</a></p>
+    <p><strong>Lokalita:</strong> Česká republika</p>
+  </section>
+
+  <section id="chatbot">
+    <h2>🤖 Chatbot</h2>
+    <div id="chat-window"></div>
+    <input type="text" id="user-input" placeholder="Zeptej se mě na něco...">
+    <button id="send-btn">Odeslat</button>
+  </section>
+
+  <footer>
+    &copy; 2025 VemTO.cz – Všechna práva vyhrazena
+  </footer>
+
+  <script>
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    function addMessage(text, sender) {
+      const div = document.createElement('div');
+      div.classList.add('message', sender);
+      div.textContent = (sender === 'user' ? 'Ty: ' : 'Bot: ') + text;
+      chatWindow.appendChild(div);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function getBotResponse(input) {
+      const text = input.toLowerCase();
+
+      if (["ahoj", "čau", "nazdar"].includes(text)) {
+        return "Ahoj! Jak ti můžu pomoct?";
+      }
+      if (text.includes("jak se máš")) {
+        return "Mám se dobře, děkuji za optání!";
+      }
+      if (text.includes("co umíš")) {
+        return "Umím odpovídat na základní otázky. Zeptej se mě!";
+      }
+      if (text.includes("kdo je einstein")) {
+        return "Albert Einstein byl známý fyzik a autor teorie relativity.";
+      }
+      if (text.includes("špagety")) {
+        return "Na špagety potřebuješ vodu, sůl a těstoviny. Vař je 8–10 minut.";
+      }
+      return "Promiň, tomu zatím nerozumím.";
+    }
+
+    sendBtn.addEventListener('click', () => {
+      const text = userInput.value.trim();
+      if (text !== "") {
+        addMessage(text, 'user');
+        const response = getBotResponse(text);
+        setTimeout(() => addMessage(response, 'bot'), 500);
+        userInput.value = "";
+      }
+    });
+
+    userInput.addEventListener('keydown', (e) => {
+      if (e.key === "Enter") {
+        sendBtn.click();
+      }
+    });
+  </script>
+
+</body>
+</html>
