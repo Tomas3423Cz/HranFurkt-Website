@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<title>Login/Register/Reset Hesla Demo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; }
+  .container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+  #chat { border: 1px solid #999; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+  .user { color: blue; margin: 5px 0; }
+  .bot { color: green; margin: 5px 0; }
+  input[type=text], input[type=password], input[type=email], input[type=number] { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+  button { padding: 10px 20px; cursor: pointer; margin-top: 8px; }
+  .error { color: red; }
+  .link-button { background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; padding:0; font-size:14px; }
+  #resetCodeDisplay { background: #eee; padding: 10px; margin-top: 10px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div id="loginDiv" class="container">
+  <h2>Přihlášení</h2>
+  <input type="text" id="loginUsername" placeholder="Uživatelské jméno" autocomplete="off" />
+  <input type="password" id="loginPassword" placeholder="Heslo" autocomplete="off" />
+  <button onclick="login()">Přihlásit se</button>
+  <p class="error" id="loginError"></p>
+  <p>
+    Nemáš účet? <button class="link-button" onclick="showRegister()">Zaregistruj se</button><br />
+    Zapomněl(a) jsi heslo? <button class="link-button" onclick="showResetRequest()">Reset hesla</button>
+  </p>
+</div>
+
+<div id="registerDiv" class="container" style="display:none;">
+  <h2>Registrace</h2>
+  <input type="text" id="regUsername" placeholder="Uživatelské jméno" autocomplete="off" />
+  <input type="email" id="regEmail" placeholder="E-mail" autocomplete="off" />
+  <input type="password" id="regPassword" placeholder="Heslo" autocomplete="off" />
+  <input type="password" id="regPassword2" placeholder="Zopakuj heslo" autocomplete="off" />
+  <button onclick="register()">Registrovat</button>
+  <p class="error" id="registerError"></p>
+  <p><button class="link-button" onclick="showLogin()">Zpět na přihlášení</button></p>
+</div>
+
+<div id="resetRequestDiv" class="container" style="display:none;">
+  <h2>Reset hesla - krok 1</h2>
+  <input type="email" id="resetEmail" placeholder="Zadej svůj e-mail" autocomplete="off" />
+  <button onclick="sendResetCode()">Poslat kód</button>
+  <p class="error" id="resetRequestError"></p>
+  <p><button class="link-button" onclick="showLogin()">Zpět na přihlášení</button></p>
+</div>
+
+<div id="resetCodeDiv" class="container" style="display:none;">
+  <h2>Reset hesla - krok 2</h2>
+  <p>Do e-mailu jsme ti poslali tento kód:</p>
+  <div id="resetCodeDisplay"></div>
+  <input type="number" id="resetCodeInput" placeholder="Zadej kód" autocomplete="off" />
+  <button onclick="verifyResetCode()">Ověřit kód</button>
+  <p class="error" id="resetCodeError"></p>
+</div>
+
+<div id="resetNewPassDiv" class="container" style="display:none;">
+  <h2>Reset hesla - krok 3</h2>
+  <input type="password" id="newPassword" placeholder="Nové heslo" autocomplete="off" />
+  <input type="password" id="newPassword2" placeholder="Zopakuj nové heslo" autocomplete="off" />
+  <button onclick="setNewPassword()">Změnit heslo</button>
+  <p class="error" id="newPassError"></p>
+</div>
+
+<div id="chatbotDiv" class="container" style="display:none;">
+  <h2>Matematický Chatbot</h2>
+  <div id="chat"></div>
+  <input type="text" id="userInput" placeholder="Napiš matematický výraz..." autocomplete="off" />
+  <button onclick="sendMessage()">Spočítat</button>
+  <button onclick="logout()" style="float:right; background:#f44336; color:#fff;">Odhlásit se</button>
+</div>
+
+<script>
+  // Pomocné proměnné
+  let resetCode = null;
+  let resetUser = null;
+
+  // Uložení uživatelů do localStorage pod klíčem 'users'
+  // Uživatel je objekt: { username, email, password }
+  function getUsers() {
+    return JSON.parse(localStorage.getItem('users') || '[]');
+  }
+  function saveUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+  }
+
+  // Přihlášení
+  function login() {
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const loginError = document.getElementById('loginError');
+
+    if (!username || !password) {
+      loginError.textContent = 'Vyplň uživatelské jméno i heslo.';
+      return;
+    }
+
+    const users = getUsers();
+    const user = users.find(u => u.username === username && u.password === password);
+
+    if (user) {
+      loginError.textContent = '';
+      showChatbot();
+    } else {
+      loginError.textContent = 'Neplatné uživatelské jméno nebo heslo.';
+    }
+  }
+
+  // Registrace
+  function register() {
+    const username = document.getElementById('regUsername').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const password2 = document.getElementById('regPassword2').value;
+    const registerError = document.getElementById('registerError');
+
+    if (!username || !email || !password || !password2) {
+      registerError.textContent = 'Vyplň všechna pole.';
+      return;
+    }
+    if (password !== password2) {
+      registerError.textContent = 'Hesla se neshodují.';
+      return;
+    }
+
+    const users = getUsers();
+
+    if (users.some(u => u.username === username)) {
+      registerError.textContent = 'Uživatelské jméno je již obsazené.';
+      return;
+    }
+    if (users.some(u => u.email === email)) {
+      registerError.textContent = 'E-mail je již registrován.';
+      return;
+    }
+
+    users.push({ username, email, password });
+    saveUsers(users);
+    registerError.style.color = 'green';
+    registerError.textContent = 'Registrace proběhla úspěšně. Můžeš se přihlásit.';
+  }
+
+  // Reset - krok 1: zadání e-mailu, odeslání kódu (simulace)
+  function sendResetCode() {
+    const email = document.getElementById('resetEmail').value.trim();
+    const resetRequestError = document.getElementById('resetRequestError');
+
+    if (!email) {
+      resetRequestError.textContent = 'Zadej e-mail.';
+      return;
+    }
+
+    const users = getUsers();
+    const user = users.find(u => u.email === email);
+
+    if (!user) {
+      resetRequestError.textContent = 'E-mail není registrován.';
+      return;
+    }
+
+    resetRequestError.textContent = '';
+    resetUser = user;
+    resetCode = Math.floor(100000 + Math.random() * 900000); // 6místný kód
+
+    // Simulace odeslání e-mailu - zobrazíme kód přímo na stránce
+    document.getElementById('resetCodeDisplay').textContent = resetCode;
+
+    showResetCode();
+  }
+
+  // Reset - krok 2: ověření kódu
+  function verifyResetCode() {
+    const codeInput = document.getElementById('resetCodeInput').value.trim();
+    const resetCodeError = document.getElementById('resetCodeError');
+
+    if (codeInput === resetCode.toString()) {
+      resetCodeError.textContent = '';
+      showResetNewPass();
+    } else {
+      resetCodeError.textContent = 'Neplatný kód.';
+    }
+  }
+
+  // Reset - krok 3: nastavení nového hesla
+  function setNewPassword() {
+    const newPass = document.getElementById('newPassword').value;
+    const newPass2 = document.getElementById('newPassword2').value;
+    const newPassError = document.getElementById('newPassError');
+
+    if (!newPass || !newPass2) {
+      newPassError.textContent = 'Vyplň obě pole.';
+      return;
+    }
+    if (newPass !== newPass2) {
+      newPassError.textContent = 'Hesla se neshodují.';
+      return;
+    }
+
+    const users = getUsers();
+    for(let u of users) {
+      if(u.username === resetUser.username) {
+        u.password = newPass;
+      }
+    }
+    saveUsers(users);
+
+    // Reset všech proměnných a návrat na přihlášení
+    resetCode = null;
+    resetUser = null;
+
+    alert('Heslo bylo úspěšně změněno, můžeš se přihlásit.');
+    showLogin();
+  }
+
+  // Zobrazení sekcí
+  function showLogin() {
+    hideAll();
+    document.getElementById('loginDiv').style.display = 'block';
+    clearAllErrors();
+  }
+  function showRegister() {
+    hideAll();
+    document.getElementById('registerDiv').style.display = 'block';
+    clearAllErrors();
+  }
+  function showResetRequest() {
+    hideAll();
+    document.getElementById('resetRequestDiv').style.display = 'block';
+    clearAllErrors();
+  }
+  function showResetCode() {
+    hideAll();
+    document.getElementById('resetCodeDiv').style.display = 'block';
+    clearAllErrors();
+  }
+  function showResetNewPass() {
+    hideAll();
+    document.getElementById('resetNewPassDiv').style.display = 'block';
+    clearAllErrors();
+  }
+  function showChatbot() {
+    hideAll();
+    document.getElementById('chatbotDiv').style.display = 'block';
+    clearAllErrors();
+    userInput.focus();
+  }
+
+  function hideAll() {
+    document.getElementById('loginDiv').style.display = 'none';
+    document.getElementById('registerDiv').style.display = 'none';
+    document.getElementById('resetRequestDiv').style.display = 'none';
+    document.getElementById('resetCodeDiv').style.display = 'none';
+    document.getElementById('resetNewPassDiv').style.display = 'none';
+    document.getElementById('chatbotDiv').style.display = 'none';
+  }
+
+  function clearAllErrors() {
+    ['loginError', 'registerError', 'resetRequestError', 'resetCodeError', 'newPassError'].forEach(id => {
+      const el = document.getElementById(id);
+      el.textContent = '';
+      el.style.color = 'red';
+    });
+  }
+
+  // Chatbot část (matematika)
+  const chat = document.getElementById('chat');
+  const userInput = document.getElementById('userInput');
+
+  function appendMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = sender;
+    div.textContent = (sender === 'user' ? "Ty: " : "Bot: ") + text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function sendMessage() {
+    let input = userInput.value.trim();
+    if (!input) return;
+
+    appendMessage(input, 'user');
+
+    try {
+      let result = math.evaluate(input);
+      appendMessage(result.toString(), 'bot');
+    } catch (e) {
+      appendMessage("Promiň, tohle neumím spočítat. Zkus jiný výraz.", 'bot');
+    }
+
+    userInput.value = '';
+    userInput.focus();
+  }
+
+  userInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+
+  // Odhlášení
+  function logout() {
+    chat.innerHTML = '';
+    showLogin();
+  }
+
+  // Start na login
+  showLogin();
+</script>
+
+</body>
+</html>
