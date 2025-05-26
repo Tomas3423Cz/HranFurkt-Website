@@ -1,222 +1,79 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>VemTO.cz – Obkladačské práce</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #f7f7f7;
-      color: #333;
-    }
-
-    header {
-      background: #007B5E;
-      color: white;
-      padding: 40px 20px;
-      text-align: center;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 2.5em;
-    }
-
-    nav {
-      background: #005B44;
-      padding: 10px;
-      text-align: center;
-    }
-
-    nav a {
-      color: white;
-      text-decoration: none;
-      margin: 0 15px;
-      font-weight: bold;
-    }
-
-    section {
-      max-width: 900px;
-      margin: auto;
-      padding: 40px 20px;
-      background: white;
-      margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      color: #007B5E;
-    }
-
-    footer {
-      background: #333;
-      color: white;
-      text-align: center;
-      padding: 20px;
-      margin-top: 40px;
-    }
-
-    .email-link {
-      color: #007B5E;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    #chatbot {
-      margin-top: 40px;
-    }
-
-    #chat-window {
-      background: #f0f0f0;
-      border-radius: 10px;
-      padding: 15px;
-      height: 300px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      margin-bottom: 10px;
-    }
-
-    .message {
-      margin-bottom: 10px;
-    }
-
-    .user {
-      font-weight: bold;
-      color: #007B5E;
-    }
-
-    .bot {
-      color: #333;
-    }
-
-    #user-input {
-      width: calc(100% - 100px);
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    #send-btn {
-      padding: 10px 20px;
-      background-color: #007B5E;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    #send-btn:hover {
-      background-color: #005b44;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>Jednoduchý chatbot bez API</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; }
+  #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
+  .user { color: blue; margin: 5px 0; }
+  .bot { color: green; margin: 5px 0; }
+  input[type=text] { width: 80%; padding: 8px; }
+  button { padding: 8px; }
+</style>
 </head>
 <body>
 
-  <header>
-    <h1>VemTO.cz</h1>
-    <p>Profesionální obkladačské práce & individuální zakázky</p>
-  </header>
+<h2>Chatbot bez API klíče</h2>
 
-  <nav>
-    <a href="#sluzby">Služby</a>
-    <a href="#objednavka">Objednávka</a>
-    <a href="#kontakt">Kontakt</a>
-  </nav>
+<div id="chat"></div>
 
-  <section id="sluzby">
-    <h2>Naše služby</h2>
-    <ul>
-      <li>Obkládání koupelen a kuchyní</li>
-      <li>Pokládka dlažby v interiéru i exteriéru</li>
-      <li>Opravy starého obkladu</li>
-      <li>Individuální zakázky na míru</li>
-    </ul>
-  </section>
+<input type="text" id="userInput" placeholder="Napiš otázku..." />
+<button onclick="sendMessage()">Odeslat</button>
 
-  <section id="objednavka">
-    <h2>Chcete si něco objednat?</h2>
-    <p>Nabízíme také možnost <strong>objednat cokoliv</strong> – stačí nám napsat!</p>
-    <p>Napište nám e-mail na adresu: <a class="email-link" href="mailto:VemTO@Práce.cz">VemTO@Práce.cz</a></p>
-  </section>
+<script>
+  const chat = document.getElementById('chat');
+  const userInput = document.getElementById('userInput');
 
-  <section id="kontakt">
-    <h2>Kontakt</h2>
-    <p><strong>E-mail:</strong> <a class="email-link" href="mailto:VemTO@Práce.cz">VemTO@Práce.cz</a></p>
-    <p><strong>Lokalita:</strong> Česká republika</p>
-  </section>
+  // Jednoduchá databáze otázek a odpovědí
+  const responses = {
+    "ahoj": "Ahoj! Jak ti mohu pomoci?",
+    "jak se máš": "Mám se dobře, díky za optání!",
+    "co děláš": "Právě si povídám s tebou.",
+    "jaké je dnes počasí": "To nevím, nemám přístup k internetu.",
+    "kdo jsi": "Jsem jednoduchý chatbot bez API klíče.",
+    "nashledanou": "Nashledanou! Měj hezký den."
+  };
 
-  <section id="chatbot">
-    <h2>🤖 Chatbot</h2>
-    <div id="chat-window"></div>
-    <input type="text" id="user-input" placeholder="Zeptej se mě na něco...">
-    <button id="send-btn">Odeslat</button>
-  </section>
+  function sendMessage() {
+    let text = userInput.value.trim().toLowerCase();
+    if (text === "") return;
 
-  <footer>
-    &copy; 2025 VemTO.cz – Všechna práva vyhrazena
-  </footer>
+    appendMessage(text, 'user');
 
-  <script>
-    const chatWindow = document.getElementById('chat-window');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
+    // Najít odpověď
+    let answer = "Promiň, tomu nerozumím. Zkus to prosím jinak.";
 
-    const OPENAI_API_KEY = "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"; // << 🔑 Sem vlož svůj OpenAI API klíč
-
-    function addMessage(text, sender) {
-      const div = document.createElement('div');
-      div.classList.add('message', sender);
-      div.textContent = (sender === 'user' ? 'Ty: ' : 'Bot: ') + text;
-      chatWindow.appendChild(div);
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    async function getBotResponse(userMessage) {
-      try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo", // nebo gpt-4 pokud máš
-            messages: [
-              { role: "system", content: "Jsi přátelský pomocník pro zákazníky VemTO.cz. Odpovídej česky." },
-              { role: "user", content: userMessage }
-            ],
-            max_tokens: 200,
-            temperature: 0.7
-          })
-        });
-
-        const data = await response.json();
-        const botMessage = data.choices?.[0]?.message?.content || "Promiň, něco se pokazilo.";
-        addMessage(botMessage, 'bot');
-      } catch (error) {
-        console.error("Chyba při volání OpenAI API:", error);
-        addMessage("⚠️ Nepodařilo se spojit s chatbotem. Zkus to znovu.", 'bot');
+    for (const key in responses) {
+      if (text.includes(key)) {
+        answer = responses[key];
+        break;
       }
     }
 
-    sendBtn.addEventListener('click', () => {
-      const text = userInput.value.trim();
-      if (text !== "") {
-        addMessage(text, 'user');
-        getBotResponse(text);
-        userInput.value = "";
-      }
-    });
+    setTimeout(() => {
+      appendMessage(answer, 'bot');
+    }, 500);
 
-    userInput.addEventListener('keydown', (e) => {
-      if (e.key === "Enter") {
-        sendBtn.click();
-      }
-    });
-  </script>
+    userInput.value = "";
+    userInput.focus();
+  }
+
+  function appendMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = sender;
+    div.textContent = (sender === 'user' ? "Ty: " : "Bot: ") + text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  // Povolit odeslání Enterem
+  userInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+</script>
 
 </body>
 </html>
