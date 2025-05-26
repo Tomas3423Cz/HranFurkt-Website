@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<title>Login + Matematický Chatbot</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; }
+  #login, #chatbot { border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+  #chat { border: 1px solid #999; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+  .user { color: blue; margin: 5px 0; }
+  .bot { color: green; margin: 5px 0; }
+  input[type=text], input[type=password] { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+  button { padding: 10px 20px; cursor: pointer; }
+  .error { color: red; }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h2>Přihlášení</h2>
+  <input type="text" id="username" placeholder="Uživatelské jméno" autocomplete="off" />
+  <input type="password" id="password" placeholder="Heslo" autocomplete="off" />
+  <button onclick="login()">Přihlásit se</button>
+  <p id="loginError" class="error"></p>
+</div>
+
+<div id="chatbot" style="display:none;">
+  <h2>Matematický Chatbot</h2>
+  <div id="chat"></div>
+  <input type="text" id="userInput" placeholder="Napiš matematický výraz..." autocomplete="off" />
+  <button onclick="sendMessage()">Spočítat</button>
+  <button onclick="logout()" style="float:right; background:#f44336; color:#fff;">Odhlásit se</button>
+</div>
+
+<script>
+  const chat = document.getElementById('chat');
+  const userInput = document.getElementById('userInput');
+  const loginDiv = document.getElementById('login');
+  const chatbotDiv = document.getElementById('chatbot');
+  const loginError = document.getElementById('loginError');
+
+  // Přednastavené přihlašovací údaje (v reálu by to bylo na serveru!)
+  const validUser = {
+    username: "uzivatel",
+    password: "heslo123"
+  };
+
+  function appendMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = sender;
+    div.textContent = (sender === 'user' ? "Ty: " : "Bot: ") + text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (username === validUser.username && password === validUser.password) {
+      loginError.textContent = '';
+      loginDiv.style.display = 'none';
+      chatbotDiv.style.display = 'block';
+      userInput.focus();
+    } else {
+      loginError.textContent = 'Neplatné uživatelské jméno nebo heslo.';
+    }
+  }
+
+  function logout() {
+    chatbotDiv.style.display = 'none';
+    loginDiv.style.display = 'block';
+    chat.innerHTML = '';
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    loginError.textContent = '';
+  }
+
+  function sendMessage() {
+    let input = userInput.value.trim();
+    if (!input) return;
+
+    appendMessage(input, 'user');
+
+    try {
+      let result = math.evaluate(input);
+      appendMessage(result.toString(), 'bot');
+    } catch (e) {
+      appendMessage("Promiň, tohle neumím spočítat. Zkus jiný výraz.", 'bot');
+    }
+
+    userInput.value = '';
+    userInput.focus();
+  }
+
+  userInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      sendMessage();
+    }
+  });
+</script>
+
+</body>
+</html>
